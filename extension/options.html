@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>StudySync — Options</title>
+  <style>
+    body { font: 14px/1.4 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial; margin: 20px; }
+    input[type=text], input[type=password] { width: 420px; padding: 6px; }
+    button { padding: 6px 10px; margin-right: 8px; }
+    .row { margin: 10px 0; }
+    .ok { color: #0a0; }
+    .err { color: #b00; }
+  </style>
+</head>
+<body>
+<h2>StudySync — Options</h2>
+
+<div class="row">
+  <div>API Base</div>
+  <input id="apiBase" type="text" placeholder="https://YOUR-RENDER-APP.onrender.com">
+</div>
+
+<div class="row">
+  <div>Email</div>
+  <input id="email" type="text" placeholder="you@gmail.com">
+</div>
+<div class="row">
+  <div>Password</div>
+  <input id="password" type="password" placeholder="••••••••">
+</div>
+
+<div class="row">
+  <button id="btnRegister">Sign up</button>
+  <button id="btnLogin">Login</button>
+  <button id="btnTest">Test connection</button>
+  <span id="status"></span>
+</div>
+
+<div class="row">
+  <label><input type="checkbox" id="includeGeneral"> Include general calendar events</label>
+</div>
+
+<div class="row">
+  <div>Default time (when only a date is shown)</div>
+  <input id="defaultTime" type="text" value="23:59">
+</div>
+
+<div class="row">
+  <div>Your subscribed ICS:</div>
+  <a id="icsLink" href="#" target="_blank"></a>
+</div>
+
+<script src="options.js"></script>
+</body>
+</html>

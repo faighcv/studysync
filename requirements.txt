@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+SQLAlchemy>=2.0
+psycopg2-binary
+pydantic>=2
+icalendar
+httpx
+APScheduler
+
+# auth
+passlib[bcrypt]
+python-jose[cryptography]==3.3.0
+email-validator
