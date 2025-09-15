@@ -1,42 +1,20 @@
-# StudySync — Brightspace → Calendar (ICS)
+Chrome extension + FastAPI backend that scrapes due dates from Brightspace pages you open and creates a private ICS feed you can subscribe to (Google/Apple/Outlook).
 
-Export due dates from Brightspace (e.g., McGill MyCourses) to your calendar via a private ICS feed.
+- Website: https://github.com/faighcv/studysync
+- API (Render): https://studysync-tyz6.onrender.com
+- Privacy: https://faighcv.github.io/studysync/privacy.html
+- Terms: https://faighcv.github.io/studysync/terms.html
+- FAQ: https://faighcv.github.io/studysync/faq.html
+- Support: https://github.com/faighcv/studysync/issues
 
-- **Extension**: one click on the Brightspace page collects due dates.
-- **Backend (FastAPI)**: stores your items and exposes your personal ICS feed URL.
-- **Calendar**: subscribe to your ICS once; it auto-refreshes.
+## How to use
+1) Install the Chrome extension (from the Web Store once published).  
+2) Open Options → Sign up / Login.  
+3) On Brightspace Calendar (List) / Assignments / Quizzes pages, click the toolbar icon.  
+4) Copy your personal ICS URL from Options and add it to your calendar app.
 
-**Live API**: `https://studysync-tyz6.onrender.com`  
-**Chrome Web Store**: _link-coming-soon_  
-**Privacy Policy**: https://faighcv.github.io/studysync/privacy
+## Permissions
+Uses `storage`, `notifications`, and runs only on Brightspace domains listed in the manifest.
 
----
-
-## How it works (high-level)
-
-1. Install the Chrome extension (`extension/`).
-2. Open the extension **Options**, **Sign up** (email/password), then you’ll see **Your subscribed ICS** URL.
-3. Visit Brightspace (e.g., McGill MyCourses) → open **Calendar → List** (or Assignments/Quizzes pages).
-4. Click the extension icon. You’ll see a notification like “Synced N items ✅”.
-5. Add your ICS URL to Google Calendar / Apple Calendar / Outlook. Your due dates appear and auto-refresh.
-
-> The ICS link is a secret token. Anyone with the link can read your due dates—don’t share it publicly.
-
----
-
-## For Users (quick start)
-
-- **Download the extension** (Web Store or Load Unpacked during development)
-- Open **Options** → Sign up / Login
-- Copy the **ICS** link shown on the Options page
-- **Google Calendar** → Other calendars → “From URL” → paste ICS
-- **Apple Calendar (Mac)** → File → New Calendar Subscription → paste ICS
-
----
-
-## For Developers
-
-### Local: Docker (recommended)
-```bash
-docker compose up --build
-# API: http://localhost:8000/health  → {"ok": true}
+## License
+MIT — see [LICENSE](./LICENSE).
