@@ -1,4 +1,4 @@
-// Brightspace scrapers (Calendar → List preferred), with fallbacks
+// content.js — Brightspace scrapers focused on Calendar › List, plus fallbacks
 
 function clean(s){ return (s||"").replace(/\s+/g," ").trim(); }
 function monthToNum(m){return{jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12}[m.toLowerCase()];}
@@ -16,14 +16,20 @@ function toISO(y,m,d,timeText,fallback){
   if (isNaN(+dt)) return null;
   return dt.toISOString();
 }
+async function getPrefs(){
+  const st = await chrome.storage.sync.get(["includeGeneral","defaultTime"]);
+  return { includeAll: !!st.includeGeneral, defaultTime: st.defaultTime || "23:59" };
+}
 
-/* -------- Calendar → List (preferred) -------- */
+/* --------- Calendar › List page --------- */
 function scrapeCalendarList(prefs){
   if (!/\/d2l\/le\/calendar\//i.test(location.pathname)) return [];
   const dateTimeRe = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s?(AM|PM)\b/i;
+
   const rows = [...document.querySelectorAll('li,[role="listitem"],article,d2l-list-item')];
   const yearNow = new Date().getFullYear();
-  const seen = new Set(), out = [];
+  const seen = new Set();
+  const out = [];
 
   for (const row of rows){
     const text = clean(row.innerText);
@@ -39,7 +45,7 @@ function scrapeCalendarList(prefs){
     if (!title) continue;
 
     const mon = m[0].match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i)[0];
-    const day = parseInt(m[0].match(/\b([1-9]|[12]\d|3[01])\b/)[0], 10);
+    const day = parseInt(m[0].match(/\b([1-9]|[12]\d|3[01])\b/)[0],10);
     const month = monthToNum(mon);
     const time  = m[0].match(/\d{1,2}:\d{2}\s?(AM|PM)/i)?.[0];
 
@@ -50,7 +56,7 @@ function scrapeCalendarList(prefs){
     const line2 = clean(text.split("\n")[1] || "");
     if (line2 && !dateTimeRe.test(line2)) course = line2;
 
-    if (!prefs?.includeGeneral && /available/i.test(title) && !/due/i.test(title)) continue;
+    if (!prefs?.includeAll && /available/i.test(title) && !/due/i.test(title)) continue;
 
     const uid = `cal-${yearNow}-${month}-${day}-${title.toLowerCase().slice(0,64)}`;
     if (seen.has(uid)) continue;
@@ -58,11 +64,10 @@ function scrapeCalendarList(prefs){
 
     out.push({ title, course, due_at: iso, kind: classify(title), source_uid: uid });
   }
-
   return out;
 }
 
-/* -------- Assignments list (fallback) -------- */
+/* --------- Assignments list (fallback) --------- */
 function scrapeAssignmentsList(prefs){
   if (!/\/d2l\/lms\/dropbox\//i.test(location.href)) return [];
   const tables = [...document.querySelectorAll("table")];
@@ -75,7 +80,7 @@ function scrapeAssignmentsList(prefs){
     for (const tr of table.querySelectorAll("tbody tr")){
       const tds = [...tr.querySelectorAll("td")];
       const title = clean(tds[iTitle]?.innerText);
-      const due   = clean(tds[iDue]?.innerText);
+      const due   = clean(tds[iDue]?.innerText); // "Sep 19, 11:59 PM"
       if (!title || !due) continue;
       const mon = due.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i)?.[0];
       const day = due.match(/\b([1-9]|[12]\d|3[01])\b/)?.[0];
@@ -88,7 +93,7 @@ function scrapeAssignmentsList(prefs){
   return out;
 }
 
-/* -------- Quizzes list (fallback) -------- */
+/* --------- Quizzes list (fallback) --------- */
 function scrapeQuizzesList(prefs){
   if (!/\/d2l\/lms\/quizzing\//i.test(location.href)) return [];
   const tables = [...document.querySelectorAll("table")];
@@ -114,7 +119,7 @@ function scrapeQuizzesList(prefs){
   return out;
 }
 
-/* -------- Home widget (last fallback) -------- */
+/* --------- Home widget (last fallback) --------- */
 function scrapeHomeUpcoming(prefs){
   const heading = [...document.querySelectorAll('h1,h2,h3,div,span,strong')].find(el=>/upcoming\s+events/i.test(el.textContent));
   if (!heading) return [];
@@ -131,7 +136,7 @@ function scrapeHomeUpcoming(prefs){
     const iso=toISO(y,m,d,timeMatch?.[0],prefs?.defaultTime);
     let title = clean(text.split("\n")[0]).replace(monRe,"").replace(/\b([1-9]|[12]\d|3[01])\b/,"").replace(timeRe,"");
     title = clean(title.replace(/^[-–—•:]+/,""));
-    if (!prefs?.includeGeneral && /available/i.test(title) && !/due/i.test(title)) continue;
+    if (!prefs?.includeAll && /available/i.test(title) && !/due/i.test(title)) continue;
     const uid=`home-${y}-${m}-${d}-${title.toLowerCase().slice(0,64)}`;
     if (!title||!iso||seen.has(uid)) continue; seen.add(uid);
     const course = clean((text.split("\n")[1]||""));
@@ -140,7 +145,7 @@ function scrapeHomeUpcoming(prefs){
   return out;
 }
 
-/* -------- dispatcher -------- */
+/* --------- Dispatcher --------- */
 function scrapeAll(prefs){
   const cal = scrapeCalendarList(prefs);
   if (cal.length) return cal;
@@ -151,16 +156,31 @@ function scrapeAll(prefs){
   return scrapeHomeUpcoming(prefs);
 }
 
-// Respond to background: scrape and return items
+/* --------- Messaging --------- */
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.type === "SCRAPE") {
-    try {
-      const items = scrapeAll(msg.prefs || {});
-      sendResponse({ ok: true, items });
-    } catch (e) {
-      console.warn("scrape error", e);
-      sendResponse({ ok: false, items: [] });
-    }
+  // Used by Options page / tests
+  if (msg?.type === "STUDYSYNC_SCRAPE") {
+    (async () => {
+      try { const prefs = await getPrefs(); sendResponse({ ok:true, items: scrapeAll(prefs) }); }
+      catch(e){ console.warn("[StudySync] scrape error", e); sendResponse({ ok:false, items: [] }); }
+    })();
+    return true;
+  }
+
+  // What the toolbar button triggers
+  if (msg?.type === "SCRAPE_AND_PUSH") {
+    (async () => {
+      try {
+        const prefs = await getPrefs();
+        const items = scrapeAll(prefs);
+        console.log("[StudySync] scraped", items.length, "items");
+        await chrome.runtime.sendMessage({ type: "PUSH_ASSIGNMENTS", items });
+        sendResponse({ ok:true, count: items.length });
+      } catch(e){
+        console.warn("[StudySync] push error", e);
+        sendResponse({ ok:false, error:String(e) });
+      }
+    })();
     return true;
   }
 });
