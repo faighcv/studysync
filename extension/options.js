@@ -1,9 +1,6 @@
 const el = id => document.getElementById(id);
 
-async function save(values) {
-  await chrome.storage.sync.set(values);
-}
-
+async function save(values) { await chrome.storage.sync.set(values); }
 async function load() {
   return await chrome.storage.sync.get([
     "apiBase","accessToken","email","includeGeneral","defaultTime","icsUrl"
@@ -22,7 +19,7 @@ async function api(base, path, method="GET", body=null, token=null) {
 
 function setStatus(msg, ok=true){
   const s = el("status");
-  s.textContent = msg; s.className = ok ? "ok":"err";
+  s.textContent = msg; s.className = ok ? "ok" : "err";
 }
 
 async function refreshIcsLink() {
@@ -35,12 +32,15 @@ async function refreshIcsLink() {
       el("icsLink").href = j.url;
       await save({icsUrl: j.url});
     }
-  }catch(e){ /* ignore until logged in */ }
+  }catch(e){/* ignore until logged in */}
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // Always pin default API base in storage
+  await save({ apiBase: "https://studysync-tyz6.onrender.com" });
+
   const st = await load();
-  el("apiBase").value = st.apiBase || "";
+  el("apiBase").value = "https://studysync-tyz6.onrender.com";
   el("email").value = st.email || "";
   el("includeGeneral").checked = !!st.includeGeneral;
   el("defaultTime").value = st.defaultTime || "23:59";
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   el("btnRegister").onclick = async () => {
     try{
-      const base = el("apiBase").value.trim();
+      const base = "https://studysync-tyz6.onrender.com";
       const email = el("email").value.trim();
       const password = el("password").value;
       const j = await api(base, "/auth/register", "POST", {email, password});
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   el("btnLogin").onclick = async () => {
     try{
-      const base = el("apiBase").value.trim();
+      const base = "https://studysync-tyz6.onrender.com";
       const email = el("email").value.trim();
       const password = el("password").value;
       const j = await api(base, "/auth/login", "POST", {email, password});
@@ -72,16 +72,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   el("btnTest").onclick = async () => {
     try{
-      const {apiBase} = await load();
-      const j = await api(apiBase, "/health");
+      const j = await api("https://studysync-tyz6.onrender.com", "/health");
       setStatus(`OK ${JSON.stringify(j)}`, true);
     }catch(e){ setStatus(e.message, false); }
   };
 
   el("includeGeneral").onchange = async () => save({includeGeneral: el("includeGeneral").checked});
   el("defaultTime").onchange = async () => save({defaultTime: el("defaultTime").value});
-  el("apiBase").onchange = async () => save({apiBase: el("apiBase").value.trim()});
-  el("email").onchange = async () => save({email: el("email").value.trim()});
 
   refreshIcsLink();
 });

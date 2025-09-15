@@ -7,12 +7,15 @@
   "host_permissions": [
     "https://*.brightspace.com/*",
     "https://mycourses2.mcgill.ca/*",
-    "http://localhost:8000/*",
     "https://studysync-tyz6.onrender.com/*"
   ],
-  "action": { "default_title": "StudySync" },
+  "action": {
+    "default_title": "StudySync",
+    "default_icon": { "16": "icon16.png", "32": "icon32.png", "128": "icon128.png" }
+  },
   "background": { "service_worker": "background.js" },
   "options_page": "options.html",
+  "icons": { "16": "icon16.png", "32": "icon32.png", "128": "icon128.png" },
   "content_scripts": [
     {
       "matches": ["https://*.brightspace.com/*", "https://mycourses2.mcgill.ca/*"],

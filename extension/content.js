@@ -1,6 +1,6 @@
-// content.js — Brightspace (McGill) scrapers focused on Calendar › List, plus fallbacks
+// Brightspace scrapers (Calendar → List preferred), with fallbacks
 
-function clean(s) { return (s || "").replace(/\s+/g, " ").trim(); }
+function clean(s){ return (s||"").replace(/\s+/g," ").trim(); }
 function monthToNum(m){return{jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12}[m.toLowerCase()];}
 function classify(title){
   const t = title.toLowerCase();
@@ -17,15 +17,13 @@ function toISO(y,m,d,timeText,fallback){
   return dt.toISOString();
 }
 
-/* --------- Calendar › List page (the one in your screenshot) --------- */
+/* -------- Calendar → List (preferred) -------- */
 function scrapeCalendarList(prefs){
   if (!/\/d2l\/le\/calendar\//i.test(location.pathname)) return [];
   const dateTimeRe = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s?(AM|PM)\b/i;
-
   const rows = [...document.querySelectorAll('li,[role="listitem"],article,d2l-list-item')];
   const yearNow = new Date().getFullYear();
-  const seen = new Set();
-  const out = [];
+  const seen = new Set(), out = [];
 
   for (const row of rows){
     const text = clean(row.innerText);
@@ -35,7 +33,7 @@ function scrapeCalendarList(prefs){
     const idx = text.indexOf(m[0]);
     let title = clean(text.slice(0, idx));
     if (!title){
-      const a = row.querySelector('a, [role="link"]');
+      const a = row.querySelector('a,[role="link"]');
       title = clean(a?.innerText || "");
     }
     if (!title) continue;
@@ -52,8 +50,7 @@ function scrapeCalendarList(prefs){
     const line2 = clean(text.split("\n")[1] || "");
     if (line2 && !dateTimeRe.test(line2)) course = line2;
 
-    // skip "Available" unless includeAll checked
-    if (!prefs?.includeAll && /available/i.test(title) && !/due/i.test(title)) continue;
+    if (!prefs?.includeGeneral && /available/i.test(title) && !/due/i.test(title)) continue;
 
     const uid = `cal-${yearNow}-${month}-${day}-${title.toLowerCase().slice(0,64)}`;
     if (seen.has(uid)) continue;
@@ -65,7 +62,7 @@ function scrapeCalendarList(prefs){
   return out;
 }
 
-/* --------- Assignments list (fallback) --------- */
+/* -------- Assignments list (fallback) -------- */
 function scrapeAssignmentsList(prefs){
   if (!/\/d2l\/lms\/dropbox\//i.test(location.href)) return [];
   const tables = [...document.querySelectorAll("table")];
@@ -78,7 +75,7 @@ function scrapeAssignmentsList(prefs){
     for (const tr of table.querySelectorAll("tbody tr")){
       const tds = [...tr.querySelectorAll("td")];
       const title = clean(tds[iTitle]?.innerText);
-      const due   = clean(tds[iDue]?.innerText); // "Sep 19, 11:59 PM"
+      const due   = clean(tds[iDue]?.innerText);
       if (!title || !due) continue;
       const mon = due.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i)?.[0];
       const day = due.match(/\b([1-9]|[12]\d|3[01])\b/)?.[0];
@@ -91,7 +88,7 @@ function scrapeAssignmentsList(prefs){
   return out;
 }
 
-/* --------- Quizzes list (fallback) --------- */
+/* -------- Quizzes list (fallback) -------- */
 function scrapeQuizzesList(prefs){
   if (!/\/d2l\/lms\/quizzing\//i.test(location.href)) return [];
   const tables = [...document.querySelectorAll("table")];
@@ -117,7 +114,7 @@ function scrapeQuizzesList(prefs){
   return out;
 }
 
-/* --------- Home widget (last fallback) --------- */
+/* -------- Home widget (last fallback) -------- */
 function scrapeHomeUpcoming(prefs){
   const heading = [...document.querySelectorAll('h1,h2,h3,div,span,strong')].find(el=>/upcoming\s+events/i.test(el.textContent));
   if (!heading) return [];
@@ -134,7 +131,7 @@ function scrapeHomeUpcoming(prefs){
     const iso=toISO(y,m,d,timeMatch?.[0],prefs?.defaultTime);
     let title = clean(text.split("\n")[0]).replace(monRe,"").replace(/\b([1-9]|[12]\d|3[01])\b/,"").replace(timeRe,"");
     title = clean(title.replace(/^[-–—•:]+/,""));
-    if (!prefs?.includeAll && /available/i.test(title) && !/due/i.test(title)) continue;
+    if (!prefs?.includeGeneral && /available/i.test(title) && !/due/i.test(title)) continue;
     const uid=`home-${y}-${m}-${d}-${title.toLowerCase().slice(0,64)}`;
     if (!title||!iso||seen.has(uid)) continue; seen.add(uid);
     const course = clean((text.split("\n")[1]||""));
@@ -143,7 +140,7 @@ function scrapeHomeUpcoming(prefs){
   return out;
 }
 
-/* --------- dispatcher --------- */
+/* -------- dispatcher -------- */
 function scrapeAll(prefs){
   const cal = scrapeCalendarList(prefs);
   if (cal.length) return cal;
@@ -154,10 +151,16 @@ function scrapeAll(prefs){
   return scrapeHomeUpcoming(prefs);
 }
 
-chrome.runtime.onMessage.addListener((msg,_sender,sendResponse)=>{
-  if (msg?.type==="STUDYSYNC_SCRAPE"){
-    try { sendResponse({ ok:true, items: scrapeAll(msg.prefs||{}) }); }
-    catch(e){ console.warn("scrape error",e); sendResponse({ ok:false, items: [] }); }
+// Respond to background: scrape and return items
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg?.type === "SCRAPE") {
+    try {
+      const items = scrapeAll(msg.prefs || {});
+      sendResponse({ ok: true, items });
+    } catch (e) {
+      console.warn("scrape error", e);
+      sendResponse({ ok: false, items: [] });
+    }
     return true;
   }
 });
