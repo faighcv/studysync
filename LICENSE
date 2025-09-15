@@ -1,0 +1,11 @@
+
+---
+
+# 4) `docs/index.md` (for GitHub Pages landing)
+
+```markdown
+# StudySync Docs
+
+- [Privacy Policy](./privacy.md)
+- [Terms of Use](./terms.md)
+- [FAQ](./faq.md)

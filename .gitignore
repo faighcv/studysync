@@ -1,16 +1,23 @@
-.env
-
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
 .venv/
+venv/
 
-__pycache__/
+# Node/extension
+node_modules/
+dist/
+*.log
 
-pgdata/
-
-
+# Env & local
 .env
-.env*
-__pycache__/
-*.pyc
-.vscode/
-pgdata/
+.env.*
+.DS_Store
 
+# IDE
+.vscode/
+.idea/
+
+# Docker local artifacts
+pgdata/
