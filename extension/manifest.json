@@ -1,21 +1,21 @@
 {
   "manifest_version": 3,
   "name": "StudySync for Brightspace",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Exports due dates from Brightspace to your calendar.",
-  "permissions": ["storage","notifications","activeTab","scripting"],
+  "permissions": ["storage", "notifications", "activeTab", "scripting"],
   "host_permissions": [
     "https://*.brightspace.com/*",
     "https://mycourses2.mcgill.ca/*",
     "http://localhost:8000/*",
-    "https://*/"
+    "https://studysync-tyz6.onrender.com/*"
   ],
   "action": { "default_title": "StudySync" },
   "background": { "service_worker": "background.js" },
   "options_page": "options.html",
   "content_scripts": [
     {
-      "matches": ["https://*.brightspace.com/*","https://mycourses2.mcgill.ca/*"],
+      "matches": ["https://*.brightspace.com/*", "https://mycourses2.mcgill.ca/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

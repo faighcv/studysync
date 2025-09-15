@@ -35,7 +35,7 @@ async function refreshIcsLink() {
       el("icsLink").href = j.url;
       await save({icsUrl: j.url});
     }
-  }catch(e){/* ignore until logged in */}
+  }catch(e){ /* ignore until logged in */ }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   el("btnTest").onclick = async () => {
     try{
-      const {apiBase, accessToken} = await load();
+      const {apiBase} = await load();
       const j = await api(apiBase, "/health");
       setStatus(`OK ${JSON.stringify(j)}`, true);
     }catch(e){ setStatus(e.message, false); }

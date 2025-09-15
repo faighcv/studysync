@@ -22,7 +22,6 @@ function scrapeCalendarList(prefs){
   if (!/\/d2l\/le\/calendar\//i.test(location.pathname)) return [];
   const dateTimeRe = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}\s?(AM|PM)\b/i;
 
-  // rows are usually li / [role="listitem"] / article / d2l-list-item
   const rows = [...document.querySelectorAll('li,[role="listitem"],article,d2l-list-item')];
   const yearNow = new Date().getFullYear();
   const seen = new Set();
@@ -34,14 +33,13 @@ function scrapeCalendarList(prefs){
     if (!m) continue;
 
     const idx = text.indexOf(m[0]);
-    let title = clean(text.slice(0, idx));                 // text before the date/time
-    if (!title){ // fallback: try a link in the row
+    let title = clean(text.slice(0, idx));
+    if (!title){
       const a = row.querySelector('a, [role="link"]');
       title = clean(a?.innerText || "");
     }
     if (!title) continue;
 
-    // month/day
     const mon = m[0].match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i)[0];
     const day = parseInt(m[0].match(/\b([1-9]|[12]\d|3[01])\b/)[0], 10);
     const month = monthToNum(mon);
@@ -50,12 +48,11 @@ function scrapeCalendarList(prefs){
     const iso = toISO(yearNow, month, day, time, prefs?.defaultTime);
     if (!iso) continue;
 
-    // optional course: often present on a second line or chip; best-effort
     let course = null;
     const line2 = clean(text.split("\n")[1] || "");
     if (line2 && !dateTimeRe.test(line2)) course = line2;
 
-    // skip purely "Available" items unless includeAll checked
+    // skip "Available" unless includeAll checked
     if (!prefs?.includeAll && /available/i.test(title) && !/due/i.test(title)) continue;
 
     const uid = `cal-${yearNow}-${month}-${day}-${title.toLowerCase().slice(0,64)}`;
@@ -148,7 +145,6 @@ function scrapeHomeUpcoming(prefs){
 
 /* --------- dispatcher --------- */
 function scrapeAll(prefs){
-  // prefer the Calendar List page, then tables, then the home widget
   const cal = scrapeCalendarList(prefs);
   if (cal.length) return cal;
   const ass = scrapeAssignmentsList(prefs);
