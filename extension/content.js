@@ -159,7 +159,7 @@ function scrapeAll(prefs){
 /* --------- Messaging --------- */
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   // Used by Options page / tests
-  if (msg?.type === "STUDYSYNC_SCRAPE") {
+  if (msg?.type === "STUDYSYNC_SCRAPE" || msg?.type === "SCRAPE") {
     (async () => {
       try { const prefs = await getPrefs(); sendResponse({ ok:true, items: scrapeAll(prefs) }); }
       catch(e){ console.warn("[StudySync] scrape error", e); sendResponse({ ok:false, items: [] }); }
@@ -167,7 +167,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 
-  // What the toolbar button triggers
+  // (Kept for backwards compatibility if background sends this)
   if (msg?.type === "SCRAPE_AND_PUSH") {
     (async () => {
       try {
