@@ -1,0 +1,3 @@
+- [Privacy Policy](./privacy.html)
+- [Terms of Use](./terms.html)
+- [FAQ](./faq.html)
