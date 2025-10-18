@@ -19,17 +19,17 @@ Uses `storage`, `notifications`, and runs only on Brightspace domains listed in 
 ## Screenshots
 
 **Options page (ICS link + test)**  
-![Options](docs/screenshots/options-ics.png)
+![Options](docs/options-ics.png)
 
 **Brightspace → Calendar → List**  
-![Calendar List](docs/screenshots/calendar-list.png)
+![Calendar List](docs/calendar-list.png)
 
 **Apple Calendar import dialog**  
-![Apple Importing](docs/screenshots/apple-importing.png)
+![Apple Importing](docs/apple-importing.png)
 
 **Apple Calendar — event examples**  
-![Apple Calendar 1](docs/screenshots/apple-event-1.png)
-![Apple Calendar 2](docs/screenshots/apple-event-2.png)
+![Apple Calendar 1](docs/apple-event-1.png)
+![Apple Calendar 2](docs/apple-event-2.png)
 
 ## License
 MIT — see [LICENSE](./LICENSE).
