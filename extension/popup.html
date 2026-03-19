@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>StudySync</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      background: #ed1b2f;
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo { font-size: 22px; }
+    .header-title { font-size: 15px; font-weight: 700; }
+    .header-sub   { font-size: 11px; opacity: 0.85; margin-top: 1px; }
+
+    /* ── Auth gate ───────────────────────────── */
+    .auth-gate {
+      padding: 28px 20px;
+      text-align: center;
+    }
+    .auth-gate p {
+      color: #555;
+      line-height: 1.55;
+      margin-bottom: 14px;
+      font-size: 12.5px;
+    }
+
+    /* ── Sync bar ────────────────────────────── */
+    .sync-bar {
+      padding: 9px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+    .last-sync { font-size: 11px; color: #888; }
+
+    /* ── Buttons ─────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: opacity 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .btn:hover   { opacity: 0.85; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-red     { background: #ed1b2f; color: #fff; }
+    .btn-gray    { background: #ececec; color: #333; }
+    .btn-ghost   { background: transparent; color: #777; padding: 5px 8px; font-weight: 500; }
+    .btn-ghost:hover { background: #f5f5f5; opacity: 1; }
+    .btn-full    { width: 100%; justify-content: center; }
+
+    /* ── Section header ──────────────────────── */
+    .section-head {
+      padding: 8px 14px 3px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #999;
+    }
+
+    /* ── Assignment list ─────────────────────── */
+    .list { max-height: 260px; overflow-y: auto; }
+
+    .item {
+      padding: 8px 14px;
+      border-bottom: 1px solid #f5f5f5;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .item:last-child { border-bottom: none; }
+
+    .badge {
+      flex-shrink: 0;
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .badge-exam       { background: #fde8e8; }
+    .badge-quiz       { background: #fff6d6; }
+    .badge-lab        { background: #e6f4ea; }
+    .badge-project    { background: #e8f0fe; }
+    .badge-discussion { background: #f3e8fd; }
+    .badge-assignment { background: #f3f4f6; }
+
+    .info { flex: 1; min-width: 0; }
+    .item-title {
+      font-weight: 600;
+      font-size: 12.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-course {
+      font-size: 11px;
+      color: #888;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .due {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .due-overdue { color: #c0392b; }
+    .due-today   { color: #e67e22; }
+    .due-soon    { color: #e67e22; }
+    .due-normal  { color: #888; font-weight: 400; }
+
+    /* ── Empty state ─────────────────────────── */
+    .empty {
+      padding: 24px 16px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 30px; margin-bottom: 8px; }
+    .empty-title { color: #888; font-size: 12.5px; margin-bottom: 4px; }
+    .empty-hint  { font-size: 11.5px; color: #aaa; line-height: 1.5; }
+
+    /* ── Footer ──────────────────────────────── */
+    .footer {
+      padding: 7px 14px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-email { font-size: 11px; color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+
+    /* ── Loading ─────────────────────────────── */
+    .loading { padding: 24px; text-align: center; color: #bbb; font-size: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #e8e8e8;
+      border-top-color: #ed1b2f;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    /* ── Toast ───────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 7px; left: 7px; right: 7px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      transform: translateY(44px);
+      opacity: 0;
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .toast.show    { transform: translateY(0); opacity: 1; }
+    .toast.success { background: #d1e7dd; color: #0a3622; }
+    .toast.error   { background: #f8d7da; color: #58151c; }
+    .toast.info    { background: #cff4fc; color: #055160; }
+
+    /* ── Hint banner ─────────────────────────── */
+    .hint-banner {
+      background: #fff8e1;
+      border-left: 3px solid #f59e0b;
+      padding: 7px 14px;
+      font-size: 11.5px;
+      color: #7a4f00;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-title">StudySync</div>
+      <div class="header-sub">myCourses Deadline Tracker</div>
+    </div>
+    <div class="header-logo">📅</div>
+  </div>
+
+  <div id="app">
+    <div class="loading"><span class="spinner"></span> Loading…</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
